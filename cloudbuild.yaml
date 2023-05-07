@@ -50,7 +50,7 @@ steps:
   - '--set-env-vars'
   - 'GOOGLE_PROJECT=${PROJECT_ID},GOOGLE_STORAGE_BUCKET=${_GCS_BUCKET_NAME},VAULT_GCPCKMS_SEAL_KEY_RING=${_KMS_KEY_RING}'
   - '--set-secrets'
-  - '/etc/vault/config.hcl=vault-server-config:latest'
+  - '/etc/vault/config.hcl=${_WORKSPACE}-vault-server-config:latest'
   - '--timeout'
   - '300'
 serviceAccount: '${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com'
