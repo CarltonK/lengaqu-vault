@@ -1,58 +1,78 @@
----
 steps:
-- id: 'Lint Dockerfile'
-  name: 'ghcr.io/hadolint/hadolint'
-  entrypoint: '/bin/hadolint'
-  args: ['cloud-run/Dockerfile']
-- id: 'Build container image'
-  name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA', '-f', 'cloud-run/Dockerfile', '.']
-- id: 'Image efficiency scan'
-  name: 'quay.io/wagoodman/dive'
-  args: ['--ci', 'gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA']
-- id: 'Image security scan'
-  name: 'aquasec/trivy:latest'
-  args: ['image', '--severity', 'HIGH,CRITICAL', '--exit-code', '1', 'gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA']
-- id: 'Push container image to GCR'
-  name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA']
-- id: 'Deploy to Cloud Run'
-  name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args:
-  - 'beta'
-  - 'run'
-  - 'deploy'
-  - '${_SERVICE_NAME}'
-  - '--allow-unauthenticated'
-  - '--ingress'
-  - '${_INGRESS}'
-  - '--concurrency'
-  - '20'
-  - '--cpu'
-  - '1'
-  - '--memory'
-  - '512Mi'
-  - '--image'
-  - 'gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA'
-  - '--region'
-  - '${_REGION}'
-  - '--min-instances'
-  - '0' 
-  - '--max-instances'
-  - '1' 
-  - '--platform'
-  - 'managed'
-  - '--port'
-  - '8200'
-  - '--service-account'
-  - '${_SERVICE_ACCOUNT_EMAIL}'
-  - '--set-env-vars'
-  - 'GOOGLE_PROJECT=${PROJECT_ID},GOOGLE_STORAGE_BUCKET=${_GCS_BUCKET_NAME},VAULT_GCPCKMS_SEAL_KEY_RING=${_KMS_KEY_RING}'
-  - '--set-secrets'
-  - '/etc/vault/config.hcl=${_WORKSPACE}-vault-server-config:latest'
-  - '--timeout'
-  - '300'
-serviceAccount: '${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com'
+  - id: "Lint Dockerfile"
+    name: "ghcr.io/hadolint/hadolint"
+    entrypoint: "/bin/hadolint"
+    args: ["cloud-run/Dockerfile"]
+
+  - id: "Build container image"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA",
+        "-f",
+        "cloud-run/Dockerfile",
+        ".",
+      ]
+
+  - id: "Image efficiency scan"
+    name: "quay.io/wagoodman/dive"
+    args: ["--ci", "gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA"]
+
+  - id: "Image security scan"
+    name: "aquasec/trivy:latest"
+    args:
+      [
+        "image",
+        "--severity",
+        "HIGH,CRITICAL",
+        "--exit-code",
+        "1",
+        "gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA",
+      ]
+
+  - id: "Push container image to GCR"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA"]
+    
+  - id: "Deploy to Cloud Run"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "beta"
+      - "run"
+      - "deploy"
+      - "${_SERVICE_NAME}"
+      - "--allow-unauthenticated"
+      - "--ingress"
+      - "${_INGRESS}"
+      - "--concurrency"
+      - "20"
+      - "--cpu"
+      - "1"
+      - "--memory"
+      - "512Mi"
+      - "--image"
+      - "gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA"
+      - "--region"
+      - "${_REGION}"
+      - "--min-instances"
+      - "0"
+      - "--max-instances"
+      - "1"
+      - "--platform"
+      - "managed"
+      - "--port"
+      - "8200"
+      - "--service-account"
+      - "${_SERVICE_ACCOUNT_EMAIL}"
+      - "--set-env-vars"
+      - "GOOGLE_PROJECT=${PROJECT_ID},GOOGLE_STORAGE_BUCKET=${_GCS_BUCKET_NAME},VAULT_GCPCKMS_SEAL_KEY_RING=${_KMS_KEY_RING}"
+      - "--set-secrets"
+      - "/etc/vault/config.hcl=${_WORKSPACE}-vault-server-config:latest"
+      - "--timeout"
+      - "300"
+serviceAccount: "${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 images:
-- 'gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA'
+  - "gcr.io/$PROJECT_ID/vault-server:$COMMIT_SHA"
