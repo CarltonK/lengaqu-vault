@@ -1,0 +1,48 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+  name: '<SERVICE_NAME>'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '<MAX_SCALE>'
+        autoscaling.knative.dev/minScale: '<MIN_SCALE>'
+        run.googleapis.com/startup-cpu-boost: 'true'
+        run.googleapis.com/cpu-throttling: 'false'
+    spec:
+      containerConcurrency: 100
+      timeoutSeconds: 300
+      serviceAccountName: '<VAULT_SA>'
+      containers:
+        - image: <VAULT_CONTAINER_IMAGE>
+          ports:
+            - containerPort: 8200
+          env:
+            - name: GOOGLE_PROJECT
+              value: '<GOOGLE_PROJECT>'
+            - name: GOOGLE_STORAGE_BUCKET
+              value: '<GOOGLE_STORAGE_BUCKET>'
+            - name: VAULT_GCPCKMS_SEAL_KEY_RING
+              value: '<VAULT_GCPCKMS_SEAL_KEY_RING>'
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: <WORKSPACE>-vault-server-config-volume
+              readOnly: true
+              mountPath: /etc/vault
+      volumes:
+        - name: <WORKSPACE>-vault-server-config-volume
+          secret:
+            secretName: '<WORKSPACE>-vault-server-config'
+            items:
+              - key: latest
+                path: 'config.hcl'
+  traffic:
+    - latestRevision: true
+      percent: 100
