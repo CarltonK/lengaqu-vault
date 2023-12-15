@@ -8,6 +8,7 @@ steps:
   # Build the container image and push to registry
   - id: "Build container image"
     name: "gcr.io/cloud-builders/docker"
+    entrypoint: sh
     args:
       [
         "/workspace/cloudbuild/scripts/build-docker-image.sh",
@@ -39,6 +40,7 @@ steps:
 
   - id: "Push container image to GAR"
     name: "gcr.io/cloud-builders/docker"
+    entrypoint: sh
     args:
       [
         "/workspace/cloudbuild/scripts/push-to-registry.sh",
@@ -50,7 +52,7 @@ steps:
 
   - id: "Deploy to Cloud Run"
     name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    entrypoint: gcloud
+    entrypoint: sh
     args:
       [
         "/workspace/cloudbuild/scripts/deploy.sh",
