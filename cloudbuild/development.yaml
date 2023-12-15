@@ -1,0 +1,72 @@
+steps:
+  # Lint application
+  - id: "Lint Dockerfile"
+    name: "ghcr.io/hadolint/hadolint"
+    entrypoint: "/bin/hadolint"
+    args: ["cloud-run/Dockerfile"]
+
+  # Build the container image and push to registry
+  - id: "Build container image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: sh
+    args:
+      [
+        "/workspace/cloudbuild/scripts/build-docker-image.sh",
+        "$LOCATION",
+        "$PROJECT_ID",
+        "${_WORKSPACE}",
+        "$COMMIT_SHA",
+      ]
+
+  - id: "Image efficiency scan"
+    name: "quay.io/wagoodman/dive"
+    args:
+      [
+        "--ci",
+        "$LOCATION-docker.pkg.dev/$PROJECT_ID/${_WORKSPACE}/vault-server:$COMMIT_SHA",
+      ]
+
+  - id: "Image security scan"
+    name: "aquasec/trivy:latest"
+    args:
+      [
+        "image",
+        "--severity",
+        "CRITICAL",
+        "--exit-code",
+        "1",
+        "$LOCATION-docker.pkg.dev/$PROJECT_ID/${_WORKSPACE}/vault-server:$COMMIT_SHA",
+      ]
+
+  - id: "Push container image to GAR"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: sh
+    args:
+      [
+        "/workspace/cloudbuild/scripts/push-to-registry.sh",
+        "$LOCATION",
+        "$PROJECT_ID",
+        "${_WORKSPACE}",
+        "$COMMIT_SHA",
+      ]
+
+  - id: "Deploy to Cloud Run"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: sh
+    args:
+      [
+        "/workspace/cloudbuild/scripts/deploy.sh",
+        "$PROJECT_ID",
+        "${_REGION}",
+        "${_SERVICE_NAME}",
+        "1",
+        "0",
+        "$LOCATION-docker.pkg.dev/$PROJECT_ID/${_WORKSPACE}/vault-server:$COMMIT_SHA",
+        "${_SERVICE_ACCOUNT_EMAIL}",
+        "${_GCS_BUCKET_NAME}",
+        "${_KMS_KEY_RING}",
+        "${_WORKSPACE}",
+      ]
+images:
+  - "$LOCATION-docker.pkg.dev/$PROJECT_ID/${_WORKSPACE}/vault-server:$COMMIT_SHA"
+timeout: 1000s
