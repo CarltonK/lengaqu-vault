@@ -32,7 +32,7 @@ steps:
       [
         "image",
         "--severity",
-        "CRITICAL",
+        "HIGH,CRITICAL",
         "--exit-code",
         "1",
         "$LOCATION-docker.pkg.dev/$PROJECT_ID/${_WORKSPACE}/vault-server:$COMMIT_SHA",
