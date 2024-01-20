@@ -30,7 +30,7 @@ spec:
               value: '<VAULT_GCPCKMS_SEAL_KEY_RING>'
           resources:
             limits:
-              cpu: 1
+              cpu: 1000m
               memory: 256Mi
           volumeMounts:
             - name: <WORKSPACE>-vault-server-config-volume
