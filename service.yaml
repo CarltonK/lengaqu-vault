@@ -12,7 +12,7 @@ spec:
         autoscaling.knative.dev/maxScale: '<MAX_SCALE>'
         autoscaling.knative.dev/minScale: '<MIN_SCALE>'
         run.googleapis.com/startup-cpu-boost: 'true'
-        # run.googleapis.com/cpu-throttling: 'false'
+        run.googleapis.com/cpu-throttling: 'true'
     spec:
       containerConcurrency: 100
       timeoutSeconds: 300
@@ -30,8 +30,8 @@ spec:
               value: '<VAULT_GCPCKMS_SEAL_KEY_RING>'
           resources:
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 1
+              memory: 256Mi
           volumeMounts:
             - name: <WORKSPACE>-vault-server-config-volume
               readOnly: true
